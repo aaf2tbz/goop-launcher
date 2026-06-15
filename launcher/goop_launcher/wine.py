@@ -21,11 +21,17 @@ class WineError(RuntimeError):
 
 
 def find_wine() -> Path:
-    """Locate the staged Wine 11.9 binary or raise."""
+    """Locate the staged Wine 11.9 binary or raise.
+
+    Wine 11.x (new WoW64, default since 9.0) installs a unified ``bin/wine``
+    that serves both 32- and 64-bit. We prefer that, falling back to the
+    legacy ``bin/wine64`` so the code stays tolerant of older system Wines.
+    """
     for base in (config.SYSTEM_WINE_DIR, config.USER_WINE_DIR):
-        wine = base / "bin" / "wine64"
-        if wine.exists():
-            return wine
+        for name in ("wine", "wine64"):
+            candidate = base / "bin" / name
+            if candidate.exists():
+                return candidate
     raise WineError(
         "Wine 11.9 is not staged. Expected it at "
         f"{config.SYSTEM_WINE_DIR} or {config.USER_WINE_DIR}. "
@@ -71,7 +77,7 @@ def init_prefix() -> Path:
     _run([str(wine), "wineboot", "--init"])
 
     # Wait for the wineserver to settle so subsequent writes don't race.
-    # wineserver lives next to wine64 in the same bin/ dir.
+    # wineserver lives next to wine in the same bin/ dir.
     wineserver = wine.parent / "wineserver"
     if wineserver.exists():
         _run([str(wineserver), "-w"], timeout=120)

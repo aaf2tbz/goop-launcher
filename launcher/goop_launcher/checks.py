@@ -229,11 +229,15 @@ def check_wine_version(runner: Runner = _real_runner) -> Check:
 
 
 def _find_wine_binary() -> Optional[Path]:
-    """Prefer the system staging dir, then the per-user one."""
+    """Prefer the system staging dir, then the per-user one.
+
+    Tries the modern unified ``wine`` first, then legacy ``wine64``.
+    """
     for base in (config.SYSTEM_WINE_DIR, config.USER_WINE_DIR):
-        candidate = base / "bin" / "wine64"
-        if candidate.exists():
-            return candidate
+        for name in ("wine", "wine64"):
+            candidate = base / "bin" / name
+            if candidate.exists():
+                return candidate
     return None
 
 

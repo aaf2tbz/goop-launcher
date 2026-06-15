@@ -22,12 +22,24 @@ def test_find_wine_prefers_system_staging(monkeypatch, tmp_path):
     usr = tmp_path / "usr-wine" / "bin"
     sys.mkdir(parents=True)
     usr.mkdir(parents=True)
-    (sys / "wine64").write_text("#!/bin/sh\n")
-    (usr / "wine64").write_text("#!/bin/sh\n")
+    # Modern Wine 11.x installs the unified `wine` binary (new WoW64).
+    (sys / "wine").write_text("#!/bin/sh\n")
+    (usr / "wine").write_text("#!/bin/sh\n")
     monkeypatch.setattr(config, "SYSTEM_WINE_DIR", tmp_path / "sys-wine")
     monkeypatch.setattr(config, "USER_WINE_DIR", tmp_path / "usr-wine")
     found = wine.find_wine()
-    assert found == sys / "wine64"
+    assert found == sys / "wine"
+
+
+def test_find_wine_falls_back_to_wine64(monkeypatch, tmp_path):
+    """Legacy Wine installs only ship wine64; we tolerate that."""
+    base = tmp_path / "sys-wine" / "bin"
+    base.mkdir(parents=True)
+    (base / "wine64").write_text("#!/bin/sh\n")
+    monkeypatch.setattr(config, "SYSTEM_WINE_DIR", tmp_path / "sys-wine")
+    monkeypatch.setattr(config, "USER_WINE_DIR", tmp_path / "usr-wine")
+    found = wine.find_wine()
+    assert found == base / "wine64"
 
 
 def test_install_dxvk_stages_four_dlls(monkeypatch, tmp_path, fake_dxvk_tarball):

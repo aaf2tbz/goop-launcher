@@ -57,8 +57,8 @@ else
 fi
 
 # ── 2. Wine 11.9 staging ────────────────────────────────────────────────────
-if [[ -x "${WINE_PREFIX}/bin/wine64" ]]; then
-    VER="$("${WINE_PREFIX}/bin/wine64" --version)"
+if [[ -x "${WINE_PREFIX}/bin/wine" ]]; then
+    VER="$("${WINE_PREFIX}/bin/wine" --version)"
     ok "Wine already staged: ${VER}"
 else
     info "Wine 11.9 not staged. (The .deb normally stages it to ${WINE_PREFIX}.)"

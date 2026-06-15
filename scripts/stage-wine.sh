@@ -70,9 +70,9 @@ sudo tar -xJf "$TARBALL" -C "${DEST}" --strip-components=1 --transform="s,^${TAR
     || sudo tar -xJf "$TARBALL" -C "${DEST}"
 
 # Verify the binary runs.
-if "${DEST}/${TARGET_NAME}/bin/wine64" --version >/dev/null 2>&1; then
+if "${DEST}/${TARGET_NAME}/bin/wine" --version >/dev/null 2>&1; then
     ok "Wine staged at ${DEST}/${TARGET_NAME}"
-    "${DEST}/${TARGET_NAME}/bin/wine64" --version
+    "${DEST}/${TARGET_NAME}/bin/wine" --version
 else
-    die "wine64 would not run after staging at ${DEST}/${TARGET_NAME}"
+    die "wine would not run after staging at ${DEST}/${TARGET_NAME}"
 fi

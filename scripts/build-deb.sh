@@ -56,8 +56,8 @@ cp -a "${GOOP_ROOT}/scripts/"* "${STAGING}/opt/goop/scripts/"
 info "Extracting Wine tarball into /opt/goop/wine-11.9…"
 mkdir -p "${STAGING}/opt/goop/wine-11.9"
 tar -xJf "$WINE_TARBALL" -C "${STAGING}/opt/goop" --strip-components=1
-[[ -x "${STAGING}/opt/goop/wine-11.9/bin/wine64" ]] \
-    || die "wine64 missing after extract — tarball layout wrong"
+[[ -x "${STAGING}/opt/goop/wine-11.9/bin/wine" ]] \
+    || die "wine missing after extract — tarball layout wrong"
 
 # Desktop entry + icon + launcher wrapper.
 cp "${GOOP_ROOT}/package/goop.desktop" "${STAGING}/usr/share/applications/"

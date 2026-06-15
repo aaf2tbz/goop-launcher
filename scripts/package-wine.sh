@@ -25,7 +25,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -d "$GOOP_WINE_PREFIX" ]] || die "Wine prefix not found: $GOOP_WINE_PREFIX"
-[[ -x "${GOOP_WINE_PREFIX}/bin/wine64" ]] || die "wine64 not found in prefix"
+[[ -x "${GOOP_WINE_PREFIX}/bin/wine" ]] || die "wine not found in prefix"
 
 require_cmd tar xz
 
@@ -38,7 +38,7 @@ TARGET_NAME="wine-${GOOP_WINE_VERSION}"
 cp -a "$GOOP_WINE_PREFIX" "${STAGING}/${TARGET_NAME}"
 
 # Record the version the tarball was built from, for verification on extract.
-"${GOOP_WINE_PREFIX}/bin/wine64" --version > "${STAGING}/${TARGET_NAME}/GOOP-WINE-VERSION.txt"
+"${GOOP_WINE_PREFIX}/bin/wine" --version > "${STAGING}/${TARGET_NAME}/GOOP-WINE-VERSION.txt"
 
 info "Creating ${OUT}…"
 tar -C "$STAGING" -cJf "$OUT" "${TARGET_NAME}"

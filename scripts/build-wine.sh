@@ -111,7 +111,7 @@ info "Installing to ${GOOP_WINE_PREFIX}…"
 make install 2>&1 | tee "$WORKDIR/wine-install.log"
 
 # ── 6. Smoke-test the built binary ───────────────────────────────────────────
-"${GOOP_WINE_PREFIX}/bin/wine64" --version | tee "$WORKDIR/wine-version.txt"
+"${GOOP_WINE_PREFIX}/bin/wine" --version | tee "$WORKDIR/wine-version.txt"
 
 ok "Wine ${GOOP_WINE_VERSION} built at ${GOOP_WINE_PREFIX}"
 info "Next: scripts/package-wine.sh to produce a release tarball."
