@@ -1,0 +1,4 @@
+# Test/dev dependencies for Goop Launcher.
+# (Runtime deps — python3, python3-gi, gir1.2-gtk-3.0 — are declared in the .deb
+# control file; this file is for running the test suite headless in CI.)
+pytest>=7.4
