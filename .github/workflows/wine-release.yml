@@ -61,8 +61,8 @@ jobs:
       - name: Verify built binary
         run: |
           set -e
-          "./dist/wine-${GOOP_WINE_VERSION}/bin/wine64" --version
-          "./dist/wine-${GOOP_WINE_VERSION}/bin/wine64" --version | tee build/wine-version.txt
+          "./dist/wine-${GOOP_WINE_VERSION}/bin/wine" --version
+          "./dist/wine-${GOOP_WINE_VERSION}/bin/wine" --version | tee build/wine-version.txt
           grep -q "wine-${GOOP_WINE_VERSION}" build/wine-version.txt
 
       - name: Package Wine tarball
