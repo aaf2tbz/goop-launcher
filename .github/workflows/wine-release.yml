@@ -25,7 +25,7 @@ env:
 
 jobs:
   build-wine:
-    name: Build Wine ${{ env.GOOP_WINE_VERSION }}
+    name: Build Wine 11.9
     runs-on: ubuntu-22.04
     timeout-minutes: 90
     steps:
@@ -49,29 +49,29 @@ jobs:
             pkg-config
 
       - name: Build Wine
+        env:
+          GOOP_WINE_PREFIX: ${{ github.workspace }}/dist/wine-${{ env.GOOP_WINE_VERSION }}
+          GOOP_WORKDIR: ${{ github.workspace }}/build
+          GOOP_SRC_DIR: ${{ github.workspace }}/build/wine-src
         run: |
           set -e
           mkdir -p build dist
-          GOOP_WINE_PREFIX="$PWD/dist/wine-${GOOP_WINE_VERSION}" \
-          GOOP_WORKDIR="$PWD/build" \
-          GOOP_SRC_DIR="$PWD/build/wine-src" \
-          GOOP_WINE_VERSION="$GOOP_WINE_VERSION" \
-            ./scripts/build-wine.sh
+          ./scripts/build-wine.sh
 
       - name: Verify built binary
         run: |
           set -e
-          ./dist/wine-${GOOP_WINE_VERSION}/bin/wine64 --version
-          ./dist/wine-${GOOP_WINE_VERSION}/bin/wine64 --version | tee build/wine-version.txt
+          "./dist/wine-${GOOP_WINE_VERSION}/bin/wine64" --version
+          "./dist/wine-${GOOP_WINE_VERSION}/bin/wine64" --version | tee build/wine-version.txt
           grep -q "wine-${GOOP_WINE_VERSION}" build/wine-version.txt
 
       - name: Package Wine tarball
+        env:
+          GOOP_WINE_PREFIX: ${{ github.workspace }}/dist/wine-${{ env.GOOP_WINE_VERSION }}
+          GOOP_WINE_TARBALL: ${{ github.workspace }}/dist/wine-${{ env.GOOP_WINE_VERSION }}-goop-x86_64.tar.xz
         run: |
           set -e
-          GOOP_WINE_PREFIX="$PWD/dist/wine-${GOOP_WINE_VERSION}" \
-          GOOP_WINE_VERSION="$GOOP_WINE_VERSION" \
-          GOOP_WINE_TARBALL="$PWD/dist/wine-${GOOP_WINE_VERSION}-goop-x86_64.tar.xz" \
-            ./scripts/package-wine.sh
+          ./scripts/package-wine.sh
           ls -lh dist/
 
       - name: Upload tarball artifact
