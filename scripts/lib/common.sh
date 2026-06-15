@@ -18,6 +18,9 @@ if [[ "$GOOP_COLORS_TTY" == "1" ]]; then
 else
     C_RED=""; C_GREEN=""; C_YELLOW=""; C_CYAN=""; C_BOLD=""; C_DIM=""; C_NC=""
 fi
+# These colour vars are consumed by scripts that source common.sh; reference
+# them once so shellcheck's "appears unused" (SC2034) stays quiet.
+: "${C_RED:-}" "${C_GREEN:-}" "${C_YELLOW:-}" "${C_CYAN:-}" "${C_BOLD:-}" "${C_DIM:-}" "${C_NC:-}"
 
 info()  { printf '%s[goop]%s %s\n' "$C_CYAN" "$C_NC" "$*"; }
 ok()    { printf '%s[ok]%s %s\n' "$C_GREEN" "$C_NC" "$*"; }
@@ -39,11 +42,17 @@ require_linux() {
     [[ "$(uname -s)" == "Linux" ]] || die "This script must run on Linux (got $(uname -s))."
 }
 
-# Resolve the repo root (parent of scripts/).
+# Resolve the repo root.
+#
+# NOTE: this function is DEFINED in scripts/lib/common.sh. Inside a function,
+# ${BASH_SOURCE[0]} is the file where the function is *defined* (common.sh),
+# not where it is called from. common.sh always lives at <root>/scripts/lib/,
+# so the repo root is exactly two directories up from it.
 goop_root() {
-    local script_dir
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-    (cd "$script_dir/.." && pwd)
+    local src="${BASH_SOURCE[0]:-$0}"
+    local common_dir
+    common_dir="$(cd "$(dirname "$src")" && pwd)"
+    (cd "$common_dir/../.." && pwd)
 }
 
 # nproc with a fallback for macOS/BSD.

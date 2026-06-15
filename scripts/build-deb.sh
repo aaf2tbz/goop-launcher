@@ -53,11 +53,13 @@ cp -a "${GOOP_ROOT}/launcher/goop_launcher" "${STAGING}/usr/lib/${PKG_NAME}/"
 cp -a "${GOOP_ROOT}/scripts/"* "${STAGING}/opt/goop/scripts/"
 
 # Wine 11.9 tree (from the release tarball).
+# The tarball already has a top-level wine-11.9/ directory, so we extract it
+# WITHOUT strip into opt/goop, landing at opt/goop/wine-11.9/.
 info "Extracting Wine tarball into /opt/goop/wine-11.9…"
-mkdir -p "${STAGING}/opt/goop/wine-11.9"
-tar -xJf "$WINE_TARBALL" -C "${STAGING}/opt/goop" --strip-components=1
+mkdir -p "${STAGING}/opt/goop"
+tar -xJf "$WINE_TARBALL" -C "${STAGING}/opt/goop"
 [[ -x "${STAGING}/opt/goop/wine-11.9/bin/wine" ]] \
-    || die "wine missing after extract — tarball layout wrong"
+    || die "wine missing after extract — tarball layout wrong (expected opt/goop/wine-11.9/bin/wine)"
 
 # Desktop entry + icon + launcher wrapper.
 cp "${GOOP_ROOT}/package/goop.desktop" "${STAGING}/usr/share/applications/"
