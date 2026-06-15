@@ -37,12 +37,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential flex bison \
-            gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
+            gcc-mingw-w64 g++-mingw-w64 \
             libfreetype-dev libfreetype6-dev \
             libx11-dev libxext-dev libxrender-dev libxrandr-dev libxcursor-dev \
             libxi-dev libxfixes-dev libxxf86vm-dev libxcomposite-dev libglib2.0-dev \
             libgl1-mesa-dev libglu1-mesa-dev \
-            libvulkan-dev vulkan-headers \
+            libvulkan-dev \
             libasound2-dev libpulse-dev \
             libgnutls28-dev libxslt1-dev libdbus-1-dev \
             libpng-dev libjpeg-dev libtiff-dev libgcrypt20-dev \
