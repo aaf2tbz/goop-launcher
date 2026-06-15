@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="goopGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7C4DFF"/>
+      <stop offset="1" stop-color="#3D1F8F"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="url(#goopGrad)"/>
+  <!-- A stylised "G" droplet -->
+  <path d="M64 34
+           C46 34 36 48 36 64
+           C36 80 48 92 64 92
+           C74 92 82 86 86 76
+           L72 76
+           C69 80 67 81 64 81
+           C56 81 50 74 50 64
+           C50 54 56 47 64 47
+           C69 47 73 50 76 55
+           L86 55
+           C82 41 75 34 64 34 Z"
+        fill="#FFFFFF" opacity="0.95"/>
+  <!-- glossy highlight -->
+  <ellipse cx="48" cy="30" rx="34" ry="9" fill="#FFFFFF" opacity="0.18"/>
+</svg>

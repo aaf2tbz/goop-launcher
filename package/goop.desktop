@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Goop Launcher
+GenericName=Roblox on Wine 11.9
+Comment=Tiny Wine 11.9 launcher for Roblox (DXVK + Vulkan, NVIDIA target)
+Exec=goop
+Icon=goop
+Terminal=false
+Categories=Game;
+Keywords=roblox;wine;dxvk;vulkan;
+StartupNotify=true
+StartupWMClass=goop

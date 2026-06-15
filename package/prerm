@@ -1,0 +1,12 @@
+#!/bin/bash
+# goop-launcher prerm — remove the per-user Wine prefix if requested.
+# We only clean up on full removal (purge-style), never on upgrade.
+set -e
+
+if [ "$1" = "remove" ]; then
+    # Leave the prefix in place on plain remove; user data may be there.
+    echo "goop-launcher: leaving Wine prefix at ~/.local/share/goop untouched."
+    echo "Remove it manually if you no longer need it:  rm -rf ~/.local/share/goop"
+fi
+
+exit 0

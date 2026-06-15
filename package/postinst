@@ -1,0 +1,28 @@
+#!/bin/bash
+# goop-launcher postinst — refresh caches, tell the user what to do next.
+# We deliberately do NOT run goop-setup here: that must run as the login user
+# (it creates the Wine prefix under their home).
+set -e
+
+# Refresh icon + desktop databases so the menu entry appears immediately.
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+fi
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database -q /usr/share/applications || true
+fi
+
+cat <<'NOTE'
+
+  Goop Launcher is installed.
+
+  First launch will:
+    1. Diagnose your system (GPU, Vulkan, NVIDIA driver, disk space).
+    2. Initialise the Wine 11.9 prefix at ~/.local/share/goop/prefix.
+    3. Download Roblox from roblox.com and stage it.
+
+  Open "Goop Launcher" from your applications menu, or run:  goop
+
+NOTE
+
+exit 0
