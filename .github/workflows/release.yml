@@ -94,7 +94,7 @@ jobs:
             Then open **Goop Launcher** from your applications menu.
 
             ### What it does
-            - Stages a self-contained **Wine 11.9** + **DXVK ${{ env.WINE_VERSION }}** runtime.
+            - Stages a self-contained **Wine 11.9** + **DXVK 2.6.1** runtime.
             - Initialises a per-user Wine prefix at `~/.local/share/goop/prefix`.
             - Downloads Roblox from `roblox.com` at first run (never redistributed).
             - Targets **NVIDIA RTX 3060 Ti** + Vulkan (driver ≥ 535).
