@@ -1,0 +1,113 @@
+name: Wine Runtime Release
+
+# Builds Wine 11.9 from source on Ubuntu 22.04 (glibc 2.35) and publishes the
+# tarball to its OWN release, tagged `runtime-wine-<ver>`. The deb release.yml
+# later downloads this tarball to assemble the .deb, so the two are decoupled:
+# we can re-tag the deb without a 30-minute Wine rebuild.
+#
+# Trigger: push a tag matching `runtime-wine-*`.
+
+on:
+  push:
+    tags: ['runtime-wine-*']
+  workflow_dispatch:
+    inputs:
+      wine_version:
+        description: 'Wine version (e.g. 11.9)'
+        required: true
+        default: '11.9'
+
+permissions:
+  contents: write
+
+env:
+  GOOP_WINE_VERSION: ${{ github.event.inputs.wine_version || '11.9' }}
+
+jobs:
+  build-wine:
+    name: Build Wine ${{ env.GOOP_WINE_VERSION }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Wine build dependencies
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential flex bison \
+            gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
+            libfreetype-dev libfreetype6-dev \
+            libx11-dev libxext-dev libxrender-dev libxrandr-dev libxcursor-dev \
+            libxi-dev libxfixes-dev libxxf86vm-dev libxcomposite-dev libglib2.0-dev \
+            libgl1-mesa-dev libglu1-mesa-dev \
+            libvulkan-dev vulkan-headers \
+            libasound2-dev libpulse-dev \
+            libgnutls28-dev libxslt1-dev libdbus-1-dev \
+            libpng-dev libjpeg-dev libtiff-dev libgcrypt20-dev \
+            pkg-config
+
+      - name: Build Wine
+        run: |
+          set -e
+          mkdir -p build dist
+          GOOP_WINE_PREFIX="$PWD/dist/wine-${GOOP_WINE_VERSION}" \
+          GOOP_WORKDIR="$PWD/build" \
+          GOOP_SRC_DIR="$PWD/build/wine-src" \
+          GOOP_WINE_VERSION="$GOOP_WINE_VERSION" \
+            ./scripts/build-wine.sh
+
+      - name: Verify built binary
+        run: |
+          set -e
+          ./dist/wine-${GOOP_WINE_VERSION}/bin/wine64 --version
+          ./dist/wine-${GOOP_WINE_VERSION}/bin/wine64 --version | tee build/wine-version.txt
+          grep -q "wine-${GOOP_WINE_VERSION}" build/wine-version.txt
+
+      - name: Package Wine tarball
+        run: |
+          set -e
+          GOOP_WINE_PREFIX="$PWD/dist/wine-${GOOP_WINE_VERSION}" \
+          GOOP_WINE_VERSION="$GOOP_WINE_VERSION" \
+          GOOP_WINE_TARBALL="$PWD/dist/wine-${GOOP_WINE_VERSION}-goop-x86_64.tar.xz" \
+            ./scripts/package-wine.sh
+          ls -lh dist/
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wine-runtime-tarball
+          path: |
+            dist/wine-*.tar.xz
+            dist/wine-*.tar.xz.sha256
+          retention-days: 14
+
+  release:
+    name: Publish Wine tarball release
+    needs: build-wine
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download tarball artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wine-runtime-tarball
+          path: release/
+      - name: Create/update release
+        uses: softprops/action-gh-release@v2
+        with:
+          # Tag we're running on; for workflow_dispatch we synthesise it.
+          tag_name: ${{ github.ref_name || format('runtime-wine-{0}', env.GOOP_WINE_VERSION) }}
+          name: Wine ${{ env.GOOP_WINE_VERSION }} runtime (Goop build)
+          body: |
+            Self-contained Wine **${{ env.GOOP_WINE_VERSION }}** build for Goop Launcher.
+
+            - Built on Ubuntu 22.04 (glibc 2.35) for broad Mint 21/22 + Ubuntu compat.
+            - `--enable-win64 --with-mingw` (new WoW64: serves both 32- and 64-bit Windows binaries).
+            - DXVK staged separately at install time.
+            - SHA-256 sidecar included (`*.tar.xz.sha256`).
+          files: |
+            release/wine-*.tar.xz
+            release/wine-*.tar.xz.sha256
+          prerelease: false

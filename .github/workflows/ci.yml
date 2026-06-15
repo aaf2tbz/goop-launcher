@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  shell:
+    name: Shellcheck
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+      - name: Shellcheck (warnings+errors)
+        # SC1091 (sourced lib/common.sh) is info-only and tolerated.
+        run: |
+          set -e
+          shellcheck -x -S warning \
+            scripts/*.sh \
+            package/postinst package/prerm package/goop-launcher.sh
+
+  python:
+    name: Python (tests + import smoke)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install test deps
+        run: pip install -r requirements-dev.txt
+      - name: Byte-compile (catch syntax errors early)
+        run: python -m compileall -q launcher
+      - name: Import smoke test (headless, no gi)
+        run: |
+          python -c "import sys; sys.path.insert(0,'launcher'); \
+          import goop_launcher; \
+          from goop_launcher import config, checks, wine, roblox; \
+          print('imports OK', goop_launcher.__version__, 'wine', config.WINE_VERSION)"
+      - name: Pytest
+        run: python -m pytest -v
+
+  deb-dry-run:
+    name: Deb structure sanity (no Wine tarball)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate packaging files exist + parse
+        run: |
+          set -e
+          # Desktop file is valid INI-ish.
+          python -c "import configparser; c=configparser.ConfigParser(); c.read('package/goop.desktop'); print('desktop ok:', c.get('Desktop Entry','Name'))"
+          # Control-like fields in build-deb.sh should mention our deps.
+          grep -q 'Depends:' scripts/build-deb.sh
+          grep -q 'python3-gi' scripts/build-deb.sh
+          grep -q 'vulkan-tools' scripts/build-deb.sh
+          # postinst must be executable-by-content (shebang present).
+          head -1 package/postinst | grep -q '^#!'
+          echo "deb packaging files OK"

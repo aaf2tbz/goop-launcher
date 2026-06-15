@@ -1,0 +1,106 @@
+name: Deb Release
+
+# Builds the goop-launcher .deb for a release tag (v*). It DOWNLOADS the
+# pre-built Wine 11.9 tarball from the `runtime-wine-11.9` release rather than
+# recompiling Wine — keeping this job to a couple of minutes.
+#
+# Trigger: push a tag matching `v*`.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Deb version (e.g. 0.1.0)'
+        required: true
+        default: '0.1.0'
+
+permissions:
+  contents: write
+
+env:
+  GOOP_DEB_VERSION: ${{ github.event.inputs.version || '0.1.0' }}
+  WINE_VERSION: '11.9'
+
+jobs:
+  build-deb:
+    name: Build .deb
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install packaging tools
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends dpkg-dev lintian xz-utils curl ca-certificates
+
+      - name: Download Wine ${{ env.WINE_VERSION }} tarball from runtime release
+        run: |
+          set -e
+          mkdir -p dist
+          TARBALL="wine-${WINE_VERSION}-goop-x86_64.tar.xz"
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/runtime-wine-${WINE_VERSION}/${TARBALL}"
+          echo "Fetching ${URL}"
+          curl -fL --retry 3 -o "dist/${TARBALL}" "${URL}"
+          curl -fL --retry 3 -o "dist/${TARBALL}.sha256" "${URL}.sha256"
+          # Verify sha256.
+          EXPECTED="$(awk '{print $1}' "dist/${TARBALL}.sha256")"
+          ACTUAL="$(sha256sum "dist/${TARBALL}" | awk '{print $1}')"
+          [[ "$ACTUAL" == "$EXPECTED" ]] || { echo "sha256 mismatch"; exit 1; }
+          echo "Wine tarball verified: $ACTUAL"
+
+      - name: Build the .deb
+        run: |
+          set -e
+          ./scripts/build-deb.sh \
+            --wine-tarball "dist/wine-${WINE_VERSION}-goop-x86_64.tar.xz" \
+            --version "$GOOP_DEB_VERSION" \
+            --out dist
+
+      - name: Show produced artifacts
+        run: ls -lh dist/*.deb
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: goop-deb
+          path: dist/*.deb
+          retention-days: 30
+
+  release:
+    name: Publish .deb to GitHub Release
+    needs: build-deb
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download deb artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: goop-deb
+          path: release/
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Goop Launcher ${{ github.ref_name }}
+          body: |
+            ## Goop Launcher ${{ github.ref_name }}
+
+            ### Install
+            ```bash
+            sudo apt install ./goop-launcher_${{ env.GOOP_DEB_VERSION }}_amd64.deb
+            ```
+            Then open **Goop Launcher** from your applications menu.
+
+            ### What it does
+            - Stages a self-contained **Wine 11.9** + **DXVK ${{ env.WINE_VERSION }}** runtime.
+            - Initialises a per-user Wine prefix at `~/.local/share/goop/prefix`.
+            - Downloads Roblox from `roblox.com` at first run (never redistributed).
+            - Targets **NVIDIA RTX 3060 Ti** + Vulkan (driver ≥ 535).
+
+            See [README](https://github.com/${{ github.repository }}#readme) for full requirements.
+          files: |
+            release/*.deb
+          prerelease: false
+          generate_release_notes: true
